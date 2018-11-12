@@ -53,7 +53,6 @@ exports.getUser = function(options={id: undefined, displayName: undefined}){
     id = options.id;
     displayName = options.displayName;
     if(id!==undefined){
-        console.log(id);
         var user =  global.server.members.get(id);
         if(user){
             return user.user

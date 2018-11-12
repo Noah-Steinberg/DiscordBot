@@ -56,6 +56,93 @@ exports.announcement = function(message, args){
 }
 
 /*
+ * Invocation Syntax: !warn <id> <reason>
+ * Action: Warn a user, logs reason and id, and also PMs the user
+ * @param {DiscordJS Message} message - discord js message
+ * @param {string[]} args - args from command (pre split)
+ */
+exports.warn = function(message, args){
+  if (!args[0]) {
+    message.channel.send(`You need arguments to send warnings!`);
+    return;
+  }
+  var userIdentifier = args.shift();
+  var id_rx = /^<@!?([0-9]+)>$/g;
+  var id = id_rx.exec(userIdentifier);
+  id = id ? id[1] : userIdentifier;
+  var user = global.util.getUser({id: id});
+  logger.info(`Locating user ${id}`);
+  
+  //Channel not found
+  if(user===undefined){
+    message.channel.send(`User not found!`)
+  }
+  else{
+    var reason;
+    if(args[0]){
+      reason = args.join(" ")
+      logger.info(`Giving a warning to ${user} on behalf of ${message.author}. Reason: ${reason}`);
+      user.send(`You have recieved a warning from ${message.author} ` +
+       `on the Tespa Carleton Discord! This does not mean anything will happen right now, ` +
+       `but please be wary of what you do in the future as multiple warnings will ` +
+       `result in punishment! Reason: ${reason} `);
+       global.database.warnUser(message.id, user.id, reason.substring(0,255));
+    }
+    else{
+      message.channel.send(`You must specify a reason for warnings!`);
+    }
+   
+  }
+}
+
+/*
+ * Invocation Syntax: !warnings <id>
+ * Action: Lists all warnings a user has been given
+ * @param {DiscordJS Message} message - discord js message
+ * @param {string[]} args - args from command (pre split)
+ */
+exports.warnings = function(message, args){
+  if (!args[0]) {
+    message.channel.send(`You need arguments to get warnings!`);
+    return;
+  }
+  var userIdentifier = args.shift();
+  var id_rx = /^<@!?([0-9]+)>$/g;
+  var id = id_rx.exec(userIdentifier);
+  id = id ? id[1] : userIdentifier;
+  var user = global.util.getUser({id: id});
+  logger.info(`Locating user ${id}`);
+  
+  //Channel not found
+  if(user===undefined){
+    message.channel.send(`User not found!`)
+  }
+  else{
+    global.database.getWarnings(id).then(
+      function(warnings){
+        console.log(warnings);
+        if(warnings.length==0){
+          message.channel.send(`User has no warnings!`)
+        }
+        else{
+          output = `Warnings for <@!${warnings[0].userid}>:\n`;
+          for(var i=0; i<warnings.length; i++){
+            output+=`\t ${i+1}. (${warnings[i].id}) ${warnings[i].reason}\n`
+          }
+          message.channel.send(output);
+        }
+      }
+    ).catch(
+      function(reason){
+          logger.error(reason);
+          message.channel.send(`Retrieving warnings failed, see system logs.`);
+      }
+    );
+    
+  }
+}
+
+/*
  * Invocation Syntax: !mod
  * Action: List mod commands
  * @param {DiscordJS Message} message - discord js message

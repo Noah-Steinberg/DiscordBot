@@ -137,4 +137,25 @@ exports.getSpecialChannels = function(){
 		});
 	});
 }
-exports.addLog = function(){};
+
+exports.warnUser = function(id, userid, reason) {
+	return new Promise(function(resolve, reject) {
+		connection.query(
+			`INSERT INTO warnings VALUES (
+				${id}, "${userid}", "${reason}"
+			);`,
+		function (error, results, fields) {
+			if (error) return reject(error);
+			return resolve(results);
+		});
+	});
+}
+
+exports.getWarnings = function(id){
+	return new Promise(function(resolve, reject) {
+		connection.query(`SELECT * FROM warnings WHERE userid=${id}`, function (error, results, fields) {
+			if (error) return reject(error);
+			return resolve(results);
+		});
+	});
+}
